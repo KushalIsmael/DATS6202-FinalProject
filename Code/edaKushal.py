@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 from sklearn.impute import SimpleImputer
 # Declare an empty list to store each line
 lines = []
@@ -30,4 +31,9 @@ print(missing.where(missing>50))
 print(df.isnull().sum().sum())
 #impute values with mean
 
-
+plt.figure(0)
+plt.plot(df['ViolentCrimesPerPop'], 'o')
+plt.title('Violent Crimes Per 100k')
+plt.ylabel('Total number of violent crimes per 100K population')
+plt.xlabel('Community index')
+plt.savefig('violent.png')
