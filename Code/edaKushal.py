@@ -29,7 +29,20 @@ print(missing)
 print(missing.where(missing>50))
 #check for total null values in df
 print(df.isnull().sum().sum())
-#impute values with mean
+#drop non predictive fields
+df = df.drop(columns =['state','county','communityname','community','fold',])
+#create dataset that drops columns where 50% of values are null
+dfdrop = df.dropna(axis=1,thresh=997)
+#impute values with mean for full dataset
+imp_mean = SimpleImputer(missing_values=np.nan, strategy='mean')
+imp_mean.fit(df)
+SimpleImputer()
+dfimpmean = imp_mean.transform(df)
+#impute values with mean for full dataset
+imp_mean = SimpleImputer(missing_values=np.nan, strategy='mean')
+imp_mean.fit(dfdrop)
+SimpleImputer()
+dfdropimpmean = imp_mean.transform(dfdrop)
 
 plt.figure(0)
 plt.plot(df['ViolentCrimesPerPop'], 'o')
