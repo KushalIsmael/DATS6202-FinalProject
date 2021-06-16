@@ -25,9 +25,18 @@ print(df.head(10))
 print(df.info(verbose=True))
 # replace ? values with numpy nan
 df = df.replace('?',np.nan)
+# Find the number of columns with missing values
+print(df.isnull().any().sum(axis=0))
 #check % null values in each column
 missing = df.isnull().sum()/(len(df))*100
 print(missing)
+# Make plots
+plt.figure(0)
+missing[missing > 0].plot.barh()
+plt.ylabel('Feature')
+plt.xlabel('Percent')
+# plt.xticks(rotation=80)
+plt.savefig('missing.png', dpi=300, bbox_inches='tight')
 #check columns with over 50% missing values
 print(missing.where(missing>50))
 #check for total null values in df
