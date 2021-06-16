@@ -1,6 +1,9 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.pipeline import Pipeline
+from sklearn.model_selection import GridSearchCV
+from sklearn.neural_network import MLPRegressor
 from sklearn.impute import SimpleImputer
 # Declare an empty list to store each line
 lines = []
@@ -50,3 +53,25 @@ plt.title('Violent Crimes Per 100k')
 plt.ylabel('Total number of violent crimes per 100K population')
 plt.xlabel('Community index')
 plt.savefig('violent.png')
+
+piped = Pipeline([('mlp', MLPRegressor(random_state=1))])
+max_neurons = 20
+max_layers = 5
+
+params = []
+for i in range(max_layers):
+    for j in range(max_neurons):
+        out = tuple(np.repeat(j + 1, i + 1))
+        params.append(out)
+
+param_grid = [{'mlp__activation': ['logistic', 'tanh', 'relu'],
+               'mlp__hidden_layer_sizes': params}]
+
+gs = GridSearchCV(estimator=piped,
+                  param_grid=param_grid,
+                  scoring='neg_mean_squared_error',
+                  cv=5)
+
+# gs = gs.fit(X_train, y_train)
+# print(gs.best_score_)
+# print(gs.best_params_)
