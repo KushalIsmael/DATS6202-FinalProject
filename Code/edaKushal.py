@@ -1,10 +1,13 @@
 import pandas as pd
+from pandas.plotting import scatter_matrix
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import GridSearchCV
 from sklearn.neural_network import MLPRegressor
 from sklearn.impute import SimpleImputer
+import seaborn as sns
+
 # Declare an empty list to store each line
 lines = []
 # Open communities.names for reading text data.
@@ -37,6 +40,40 @@ plt.ylabel('Feature')
 plt.xlabel('Percent')
 # plt.xticks(rotation=80)
 plt.savefig('missing.png', dpi=300, bbox_inches='tight')
+
+plt.figure(1)
+plt.hist(df['ViolentCrimesPerPop'])
+plt.xlabel('Number of Violent Crimes Per 100k Population')
+plt.title('Histogram of Violent Crimes')
+plt.savefig('histogram.png', dpi=300, bbox_inches='tight')
+
+#subset with race fields
+dfrace = df[['racepctblack','racePctWhite','racePctAsian','racePctHisp','ViolentCrimesPerPop']]
+#pair plot of race and violent crimes
+plt.title('Pair Plot of Race and Violent Crimes')
+sns.pairplot(dfrace)
+plt.show()
+
+#correlation matrix of % race and violent crimes
+corrace = dfrace.corr()
+sns.heatmap(corrace, annot=True)
+plt.show()
+
+#subset with age fields
+dfage = df[['agePct12t21','agePct12t29','agePct16t24','agePct65up','ViolentCrimesPerPop']]
+#pair plot for age and violent crimes
+sns.pairplot(dfage)
+plt.title('Pair Plot of Age and Violent Crimes')
+plt.show()
+
+#correlation matrix for age and violent crimes
+corrage = dfage.corr()
+sns.heatmap(corrage, annot=True)
+plt.show()
+
+
+
+
 #check columns with over 50% missing values
 print(missing.where(missing>50))
 #check for total null values in df
@@ -56,7 +93,8 @@ imp_mean.fit(dfdrop)
 SimpleImputer()
 dfdropimpmean = imp_mean.transform(dfdrop)
 
-plt.figure(0)
+
+plt.figure(2)
 plt.plot(df['ViolentCrimesPerPop'], 'o')
 plt.title('Violent Crimes Per 100k')
 plt.ylabel('Total number of violent crimes per 100K population')
