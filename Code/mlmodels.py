@@ -1,29 +1,59 @@
+import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn import svm, tree, neighbors, neural_network
-from sklearn.neural_network import MLPRegressor
-#todo create train and split here for input into models
+from sklearn import svm, tree, neighbors, neural_network, ensemble
+from sklearn.metrics import mean_squared_error
 
-#https://scikit-learn.org/stable/modules/svm.html#regression
-svmr = svm.SVR()
-svmr.fit(#xtrain,#ytrain)
-SVR()
-svmr.predict(#ytest)
-#https://scikit-learn.org/stable/auto_examples/svm/plot_svm_regression.html#sphx-glr-auto-examples-svm-plot-svm-regression-py
 
-#https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsRegressor.html#sklearn.neighbors.KNeighborsRegressor
-knnr = neighbors.KNeighborsRegressor(n_neighbors=3)
-knnr.fit(#xtrain,#ytrain)
-KNeighborsRegressor(...)
-knnr.predict(#ytest)
 
-#https://scikit-learn.org/stable/modules/tree.html#regression
-dtr = tree.DecisionTreeRegressor()
-dtr = dtr.fit(#Xtrain, #ytrain)
-dtr.predict(#ytest)
+def modeleval(X,y,test):
+    """
+    Run multiple ML models with X and y data and return table to evaluate
 
-#https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPRegressor.html#sklearn.neural_network.MLPRegressor
-mlp = MLPRegressor(random_state=1, max_iter=500).fit(X_train, y_train)
-mlp.predict(X_test[:2])
-array([-0.9..., -7.1...])
->>> regr.score(X_test, y_test)
+    :param X: predictor variables
+    :param y: target variable
+    :param test: float of amount to test
+    :return: table of model with corresponding R**2 and MSE
+
+    """
+
+    #--train test split--
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = test)
+
+    #---SVR---
+    svr = svm.SVR()
+    svr.fit(X_train,y_train)
+    y_pred = svr.predict(X_test)
+    svrscore = svr.score(y_test,y_pred)
+    svrmse = mean_squared_error(y_test,y_pred)
+
+    #--KNR--
+    knr = neighbors.KNeighborsRegressor(n_neighbors=3)
+    knr.fit(X_train,y_train)
+    y_pred = knr.predict(X_test)
+    knrscore = knr.score(y_test,y_pred)
+    knrmse = mean_squared_error(y_test, y_pred)
+
+    #--DTR--
+    dtr = tree.DecisionTreeRegressor()
+    dtr.fit(X_train,y_train)
+    y_pred = dtr.predict(X_test)
+    dtrscore = dtr.score(y_test,y_pred)
+    dtrmse = mean_squared_error(y_test,y_pred)
+
+    #--RFR--
+    rfr = ensemble.RandomForestRegressor()
+    rfr.fit(X_train,y_train)
+    y_pred = rfr.predict(X_test)
+    rfrscore = rfr.score(y_test,y_pred)
+    rfrmse = mean_squared_error(y_test,y_pred)
+
+    evaltable = pd.DataFrame({
+        'Model':['SVR','KNR','DTR','RFR','MLP'], # add any other
+        'Accuracy Score': [svrscore,knrscore,dtrscore,rfrscore],
+        'MSE':[svrmse,knrmse,dtrmse,rfrmse]
+    })
+
+
+
+    return evaltable.style.background_gradient(cmap='Blues')
