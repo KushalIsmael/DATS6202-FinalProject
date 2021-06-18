@@ -151,7 +151,7 @@ to_remove = findCorrelations(X_train.corr())
 X_train = X_train.drop(X_train.columns[to_remove], axis=1)
 # Drop police columns with NA values
 X_train = X_train.dropna(axis=1)
-"""
+
 #--MLP Grid Search--
 piped = Pipeline([('mlp', MLPRegressor(random_state=1))])
 max_neurons = 100
@@ -162,19 +162,19 @@ for i in np.arange(2, max_layers + 1, 1):
         out = tuple(np.repeat(j + 1, i + 1))
         params.append(out)
 
-param_grid = [{'mlp__activation': ['logistic', 'tanh', 'relu'],
+mlpparam = [{'mlp__activation': ['logistic', 'tanh', 'relu'],
                'mlp__hidden_layer_sizes': params}]
 
-gs = GridSearchCV(estimator=piped,
-                  param_grid=param_grid,
+mlpgrid = GridSearchCV(estimator=piped,
+                  param_grid=mlpparam,
                   scoring='neg_mean_squared_error',
                   verbose=2,
                   cv=5)
 
-gs = gs.fit(X_train, y_train)
-print(gs.best_score_)
-print(gs.best_params_)
-"""
+mlpgrid = mlpgrid.fit(X_train, y_train)
+mlpscore = mlpgrid.best_score_
+mlpparams = mlpgrid.best_params_
+
 #--SVM Grid Search--
 svm = svm.SVR()
 
@@ -190,18 +190,17 @@ svmgrid = GridSearchCV(estimator=svm,
 
 svmgs = svmgrid.fit(X_train, y_train)
 
-print(svmgrid.best_score_)
-print(svmgrid.best_params_)
+svmscore = svmgrid.best_score_
+svmparams = svmgrid.best_params_
 
 
 
 #--DTR Grid Search--
 
 dtr = DecisionTreeRegressor()
-#todo review params and values
 #initially set low to ensure that code will run without errors
 dtrparam = [{'max_features':['auto','sqrt'],
-             'max_depth':(np.arange(10,20,1)),
+             'max_depth':(np.arange(10,65,1)),
               }]
 
 dtrgrid = GridSearchCV(estimator=dtr,
@@ -212,17 +211,17 @@ dtrgrid = GridSearchCV(estimator=dtr,
 
 dtrgs = dtrgrid.fit(X_train, y_train)
 
-print(dtrgrid.best_score_)
-print(dtrgrid.best_params_)
+dtrscore = dtrgrid.best_score_
+dtrparams = dtrgrid.best_params_
 
 #--RFR Grid Search--
 rfr = RandomForestRegressor()
 
-#todo review params and values
 #initially set low to ensure that code will run without errors
-rfrparam = [{'n_estimators':(np.arange(10,50,10)),
+rfrparam = [{'n_estimators':(np.arange(50,200,10)),
              'max_features':['auto','sqrt'],
              'max_depth':(np.arange(10,50,5)),
+             'min_sample_leaf':(np.arange(20,60,5)),
              'bootstrap':[True,False],
              'warm_start':[True,False]
             }]
@@ -233,5 +232,17 @@ rfrgrid = GridSearchCV(estimator=rfr,
                        verbose=2,
                        cv=5)
 rfrgs = rfrgrid.fit(X_train, y_train)
-print(rfrgrid.best_score_)
-print(rfrgrid.best_params_)
+rfrscore = rfrgrid.best_score_
+rfrparams = rfrgrid.best_params_
+
+evaltable = pd.DataFrame({
+    'Model': ['SVR', 'DTR', 'RFR', 'MLP'],
+    'Score': [svmscore,dtrscore, rfrscore, mlpscore],
+    'Parameters': [svmparams, dtrparams, rfrparams, rfrparams]
+    })
+
+
+evaltable.to_csv('Model Eval.csv',index=False)
+
+evaltable = evaltable.style.background_gradient(cmap='Blues')
+plt.savefig('Model Eval.png', dpi=300, bbox_inches='tight')
