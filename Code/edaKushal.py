@@ -174,7 +174,7 @@ print(gs.best_score_)
 print(gs.best_params_)
 
 #--SVM Grid Search--
-svm = svr = svm.SVR()
+svm = svm.SVR()
 
 svmparam = [{'kernel':('linear','poly','rbf','sigmoid'),
             'C':(np.arange(1,20,1)),
@@ -190,3 +190,5 @@ svmgs = svmgrid.fit(X_train, y_train)
 
 print(svmgrid.best_score_)
 print(svmgrid.best_params_)
+
+#--RFR Grid Search--
