@@ -10,6 +10,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.model_selection import GridSearchCV
 from sklearn.neural_network import MLPRegressor
 from sklearn.experimental import enable_iterative_imputer
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.tree import DecisionTreeRegressor
 from sklearn.model_selection import train_test_split
 
 
@@ -149,7 +151,7 @@ to_remove = findCorrelations(X_train.corr())
 X_train = X_train.drop(X_train.columns[to_remove], axis=1)
 # Drop police columns with NA values
 X_train = X_train.dropna(axis=1)
-
+"""
 #--MLP Grid Search--
 piped = Pipeline([('mlp', MLPRegressor(random_state=1))])
 max_neurons = 100
@@ -172,12 +174,12 @@ gs = GridSearchCV(estimator=piped,
 gs = gs.fit(X_train, y_train)
 print(gs.best_score_)
 print(gs.best_params_)
-
+"""
 #--SVM Grid Search--
 svm = svm.SVR()
 
 svmparam = [{'kernel':('linear','poly','rbf','sigmoid'),
-            'C':(np.arange(1,20,1)),
+            'C':(np.arange(1,10,1)),
             'epsilon':(np.arange(.1,1.1,0.1))}]
 
 svmgrid = GridSearchCV(estimator=svm,
@@ -191,4 +193,45 @@ svmgs = svmgrid.fit(X_train, y_train)
 print(svmgrid.best_score_)
 print(svmgrid.best_params_)
 
+
+
+#--DTR Grid Search--
+
+dtr = DecisionTreeRegressor()
+#todo review params and values
+#initially set low to ensure that code will run without errors
+dtrparam = [{'max_features':['auto','sqrt'],
+             'max_depth':(np.arange(10,20,1)),
+              }]
+
+dtrgrid = GridSearchCV(estimator=dtr,
+                       param_grid=dtrparam,
+                       scoring='neg_mean_squared_error',
+                       verbose=2,
+                       cv=5)
+
+dtrgs = dtrgrid.fit(X_train, y_train)
+
+print(dtrgrid.best_score_)
+print(dtrgrid.best_params_)
+
 #--RFR Grid Search--
+rfr = RandomForestRegressor()
+
+#todo review params and values
+#initially set low to ensure that code will run without errors
+rfrparam = [{'n_estimators':(np.arange(10,50,10)),
+             'max_features':['auto','sqrt'],
+             'max_depth':(np.arange(10,50,5)),
+             'bootstrap':[True,False],
+             'warm_start':[True,False]
+            }]
+
+rfrgrid = GridSearchCV(estimator=rfr,
+                       param_grid=rfrparam,
+                       scoring='neg_mean_squared_error',
+                       verbose=2,
+                       cv=5)
+rfrgs = rfrgrid.fit(X_train, y_train)
+print(rfrgrid.best_score_)
+print(rfrgrid.best_params_)
