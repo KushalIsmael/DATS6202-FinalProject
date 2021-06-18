@@ -1,12 +1,17 @@
 import pandas as pd
-from pandas.plotting import scatter_matrix
 import numpy as np
+
 import matplotlib.pyplot as plt
+import seaborn as sns
+from pandas.plotting import scatter_matrix
+
+from sklearn import svm
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import GridSearchCV
 from sklearn.neural_network import MLPRegressor
 from sklearn.experimental import enable_iterative_imputer
-from sklearn.impute import IterativeImputerimport seaborn as sns
+from sklearn.model_selection import train_test_split
+
 
 # Functions
 def findCorrelations(correlations, cutoff=0.9):
@@ -117,7 +122,6 @@ print(missing.where(missing>50))
 print(df.isnull().sum().sum())
 #drop non predictive fields
 df = df.drop(columns =['state','county','communityname','community','fold',])
-#create dataset that drops columns where 50% of values are null
 
 plt.figure(2)
 plt.plot(df['ViolentCrimesPerPop'], 'o')
@@ -131,8 +135,12 @@ plt.savefig('violent.png')
 X = df.drop('ViolentCrimesPerPop', axis=1)
 y = df['ViolentCrimesPerPop']
 
-# imp = IterativeImputer(max_iter=10, random_state=0)
-# Ximpute = imp.fit_transform(X)
+"""
+#caused attribute error for correlations b/c numpy
+from sklearn.impute import IterativeImputer
+imp = IterativeImputer(max_iter=10, random_state=0)
+Ximpute = imp.fit_transform(X)
+"""
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1)
 
@@ -142,6 +150,7 @@ X_train = X_train.drop(X_train.columns[to_remove], axis=1)
 # Drop police columns with NA values
 X_train = X_train.dropna(axis=1)
 
+#--MLP Grid Search--
 piped = Pipeline([('mlp', MLPRegressor(random_state=1))])
 max_neurons = 100
 max_layers = 5
@@ -163,3 +172,21 @@ gs = GridSearchCV(estimator=piped,
 gs = gs.fit(X_train, y_train)
 print(gs.best_score_)
 print(gs.best_params_)
+
+#--SVM Grid Search--
+svm = svr = svm.SVR()
+
+svmparam = [{'kernel':('linear','poly','rbf','sigmoid'),
+            'C':(np.arange(1,20,1)),
+            'epsilon':(np.arange(.1,1.1,0.1))}]
+
+svmgrid = GridSearchCV(estimator=svm,
+                       param_grid=svmparam,
+                       scoring='neg_mean_squared_error',
+                       verbose=2,
+                       cv=5)
+
+svmgs = svmgrid.fit(X_train, y_train)
+
+print(svmgrid.best_score_)
+print(svmgrid.best_params_)
