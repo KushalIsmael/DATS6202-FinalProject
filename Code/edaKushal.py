@@ -142,8 +142,11 @@ def modelevalgs(X,y,filename):
     # Highly correlated features
     to_remove = findCorrelations(X_train.corr())
     X_train = X_train.drop(X_train.columns[to_remove], axis=1)
+    X_test = X_test.drop(X_test.columns[to_remove], axis=1)
+
     # Drop police columns with NA values
     X_train = X_train.dropna(axis=1)
+    X_test = X_test.dropna(axis=1)
 
 
     #--MLP Grid Search--
