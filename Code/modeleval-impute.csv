@@ -1,0 +1,5 @@
+Model,Score,Parameters
+SVR,-0.01854099466973217,"{'C': 1, 'epsilon': 0.1, 'kernel': 'rbf'}"
+DTR,-0.036060217629337116,"{'max_depth': 13, 'max_features': 'auto'}"
+RFR,-0.017860837466408548,"{'bootstrap': False, 'max_depth': 20, 'max_features': 'sqrt', 'n_estimators': 130}"
+MLP,-0.018180837312465285,"{'mlp__activation': 'tanh', 'mlp__hidden_layer_sizes': (96, 96, 96)}"
