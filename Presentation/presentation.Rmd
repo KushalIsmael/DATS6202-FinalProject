@@ -1,0 +1,49 @@
+---
+title: "Final Project"
+author: "Kushal Ismael and Matt Kosko"
+date: "6/23/2021"
+bibliography: ml.bib
+output: beamer_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Introduction
+
+## Problem Statement
+
+## Target
+[Put image here]
+
+## Plan
+Outline
+
+
+## Contribution
+- This data set does not have any published papers relevant to it [@redmond2009crime]
+  - So any analysis with this particular data set is new
+- There is a large literature on the use of machine learning in so-called "predictive policing" [@hardyns2018predictive]
+- Many predictive policing systems use a single method ML method, like 
+- We have tried many different methods and compared them
+
+## Missing Data
+- Data are "missing not at random" [@rubin1976inference]
+- Impute data using *MICE* algorithm [@van2018flexible]
+  - Implemented as part of `MultipeImputer`
+- Check analysis as part of robustness check
+
+## Preprocessing
+- Filter features based on correlation
+
+## Solver
+
+## Hyperparameter Tuning
+
+
+## Results
+
+
+
+## References
