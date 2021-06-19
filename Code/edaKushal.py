@@ -6,7 +6,7 @@ import seaborn as sns
 from pandas.plotting import scatter_matrix
 
 from sklearn import svm
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import GridSearchCV
 from sklearn.neural_network import MLPRegressor
@@ -168,9 +168,13 @@ def modelevalgs(X,y,filename):
     mlpgrid = mlpgrid.fit(X_train, y_train)
 
     mlp_pred = mlpgrid.predict(X_test)
+
     mlpmse = mean_squared_error(y_test, mlp_pred)
 
+    mlpr2 = r2_score(y_test, mlp_pred)
+
     mlpscore = mlpgrid.best_score_
+
     mlpparams = mlpgrid.best_params_
 
 
@@ -191,6 +195,7 @@ def modelevalgs(X,y,filename):
 
     svm_pred = svmgrid.predict(X_test)
     svmmse = mean_squared_error(y_test, svm_pred)
+    svmr2 = r2_score(y_test, svm_pred)
     
     svmscore = svmgrid.best_score_
     svmparams = svmgrid.best_params_
@@ -214,6 +219,8 @@ def modelevalgs(X,y,filename):
     dtr_pred = dtrgrid.predict(X_test)
     dtrmse = mean_squared_error(y_test, dtr_pred)
 
+    dtrr2 = r2_score(y_test, dtr_pred)
+
     dtrscore = dtrgrid.best_score_
     dtrparams = dtrgrid.best_params_
 
@@ -235,6 +242,8 @@ def modelevalgs(X,y,filename):
 
     rfr_pred = rfrgrid.predict(X_test)
     rfrmse = mean_squared_error(y_test, rfr_pred)
+
+    rfrr2 = r2_score(y_test, rfr_pred)
     
     rfrscore = rfrgrid.best_score_
     rfrparams = rfrgrid.best_params_
@@ -244,8 +253,9 @@ def modelevalgs(X,y,filename):
     #--Evaluation Table--
     evaltable = pd.DataFrame({
         'Model': ['SVR', 'DTR', 'RFR', 'MLP'],
-        'Negative Mean Square Error': [svmscore,dtrscore, rfrscore, mlpscore],
-        'Mean Square Error': [svmmse, dtrmse, rfrmse, mlpmse],
+        'Negative Mean Squared Error': [svmscore,dtrscore, rfrscore, mlpscore],
+        'Mean Squared Error': [svmmse, dtrmse, rfrmse, mlpmse],
+        'R^2 Score': [svmr2, dtrr2, rfrr2, mlpr2],
         'Parameters': [svmparams, dtrparams, rfrparams, mlpparams]
         })
 
