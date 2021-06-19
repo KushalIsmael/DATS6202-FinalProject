@@ -1,0 +1,139 @@
+---
+title: "Final Project"
+author: "Kushal Ismael and Matt Kosko"
+bibliography: ml.bib
+date: "6/23/2021"
+output: bookdown::pdf_document2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# Introduction
+
+In this report, we will predict violent crime rates using a variety of features plausibly associated with crime. The data comes from the "Communities and Crime" dataset, hosted on the University of California Irvine machine learning repository [@redmond2009crime].
+
+## Description of the Data
+
+The dataset, created in July 2009, combines data from three datasets, the 1990 Census, 1995 FBI Uniform Crime Report (UCR), and the 1990 US Law Enforcement Management and Administrative Statistics Survey (LEMAS) [@redmond2009crime]. The observations in the dataset are at the community level and contain information about socio-economic indicators (e.g., median family income) and crime/law enforcement (e.g., per capita number of police officers).  In total, there are 1994 observations and 128 features in the data; 5 of the features are considered non-predictive (`state`, `county`, `community`, `communityname`, `fold`) and one feature is the outcome (`ViolentCrimePerPop`), leaving us with 122 predictive features. 
+
+Normally, we would scale the data as part of the preprocessing step in the machine learning process. However, this data has already been standardized to a 0-1 interval using an "equal-interval binning method" [@redmond2009crime]. The method used preserves the distribution of each feature as well as the ratios of values within features.
+
+There are too many potential features to include all possible pairwise plots. However, we show a scatter plot of the violent crime rate per 100,000 population in Figure \@ref(fig:violent). We see that most communities have a relatively low violent crime rate, with a small number of very violent communities. 
+
+```{r violent, out.width="65%", fig.align='center', fig.cap='Violent Crime Per 100k'}
+knitr::include_graphics('violent.png')
+```
+
+## Machine Learning Approach
+
+The main model that we will use is a *multilayer perceptron* (MLP). The multilayer perceptron is a type of artificial neural network, with multiple hidden layers and neurons in each layer. MLPs are extremely useful and versatile in that they can approximate almost any function to an arbitrary degree of accuracy [@hagan2014neural, p. 29]. An example of a 3-layer network is taken from [@hagan2014neural, p. 364] and shown in Figure \@ref(fig:mlp).
+
+```{r mlp, out.width="75%", fig.align='center', fig.cap = "3-Layer Perceptron"}
+knitr::include_graphics('mlp.png')
+```
+
+
+We use the *backpropagation* algorithm to find the appropriate weights and biases for our neural network. The backpropagation is based on optimizing some performance index; in our case, the performance index is the mean squared error (MSE). Let $X$ be a set of weights and biases in a multilayer network. The MSE is defined as:
+\[
+MSE(\mathbf{X}) = E(\mathbf{t} - \mathbf{a})^T(\mathbf{t} - \mathbf{a})
+\]
+
+where $E$ is the expectation operator over the set of input vectors, $\mathbf{t}$ is the target output, and $\mathbf{a}$ is the output of the netwowrk with the weights and biases $\mathbf{x}$ [@hagan2014neural, p. 364]. Because we do not know the probability distribution of the input vectors, we will approximate the MSE by replacing the expecation with the actual squared error. 
+\[
+\hat{MSE}(\mathbf{X})_k = (\mathbf{t}(k) - \mathbf{a}(k))^T(\mathbf{t}(k) - \mathbf{a}(k))
+\]
+
+where $k$ indicates the $k$th iteration in an optimization algorithm. Once we construct this, we can calculate derivatives with respect to each weight and bias terms and apply gradient descent methods to update weight and biases. The goal is to minimize the performance index.
+
+The backpropagation algorithm is named because it consists of both forward and backward steps. In the forward portion, we feedforward inputs with initialized weights and biases and record the output error, $\mathbf{e} = \mathbf{t} - \mathbf{a}$. Initial weights are chosen to be small, from a uniform distribution centered around 0; experimental results have shown that these produce the fasting learning in backpropagation [@lari1989effect, p. 218]. Moreover, both extremely large weights and weights set zero should be avoided. The zero point is a saddle point on the performance surface, while the surface tends to be flat at extreme values [@hagan2014neural, p. 418].  In the backwards part, we backpropagate the gradient of the MSE with respect to the various weights and biases; this is accomplished through the chain rule [@aggarwal2018neural].
+
+Because the backpropagation algorithm involves the minimization of the performance index, it is simply a numerical optimization problem [@hagan2014neural, p. 414]. In class, we mostly focused on stochastic gradient descent, however for this project, we use an L-BFGS (Limited memory Broyden–Fletcher–Goldfarb–Shanno) solver. This algorithm is an approximation of the Newton method [@aggarwal2018neural, p. 148]. In the typical Newton method, we update the weight and bias vector $\mathbf{W}$ as:
+\[
+\mathbf{W}(t+1) = \mathbf{W}(t) - \mathbf{H}^{-1}\nabla F(t)
+\]
+
+where $\mathbf{H}^{-1}$ is the inverse of the Hessian matrix and $F$ is the performance index [@aggarwal2018neural, p. 148]. In the L-BFGS algorithm, we replace $\mathbf{H}^{-1}$ with an approximation $\mathbf{G}(t)$ that is updated at each step. Added in a learning rate, we get:
+
+\[
+\mathbf{W}(t+1) = \mathbf{W}(t) - \alpha(t)\mathbf{G}(t)\nabla F(t)
+\]
+
+# Experimental Setup
+
+First, we need to preprocess the data to prepare the model for training. First, there are 25 features that have missing values. Most of the missing values are related to police variables. This is unsurprising as the police data came from surveys of "police departments with at least 100 officers" [@redmond2009crime]. Figure \@ref(fig:missing) shows the features with missing data and the percent of observations with missing information. 
+
+```{r missing, out.width="75%", fig.align='center', fig.cap = "Missing Data Features"}
+knitr::include_graphics('missing.png')
+```
+
+The most common approach for dealing with missing data is to simply drop the missing values from the analysis [@van2018flexible]. This approach will not work with our data; because law enforcement information is not recorded based on the number of officers in a community, the data is, in the words of [@rubin1976inference], "missing not at random." This means that the missingness of the data depends on the unobserved values themselves. Instead of dropping data, simple approaches, such as imputing missing values with the mean of the observed values are used. This approach however, is only appropriate with a handful of missing values and will otherwise lead to biased estimates of parameters [@van2018flexible, p. 12].
+
+It is likely that these policing variables are important predictors of violent crime. As a result, we will perform two analyses, one with the high missing features dropped and another with the features imputed. As a robustness check, we will see if the accuracy of the models is different with the missing data imputed.
+
+While this data is not high-dimensional in that the number of features is not greater than the number of observations; however, there are a lot of features for a relatively small number of observations. As a result, we will first undertake feature selection by excluding variables that are highly correlated with one another; in this case, we drop variables that are greater than 0.9 in correlation. The algorithm for removing highly correlated features is taken from [@kuhn2013applied, p. 47] and the code implementing this in R in the `caret` package [@kuhn2020package] was translated into Python.
+
+
+By standardizing the data in this way, we can improve the performance of the backpropagation algorithm [@kim1999normalization]. 
+
+In order to accurately estimate the true error of the model, we will split the data into a training set and test set. The training set is use to actually fit the model, estimating the weights and biases. The test set is a hold out set, data that the model has not seen. The performance of the model on the test set will provide a good indication of how the model would perform on future data. 
+
+The MLP has several *hyperparamaters* that we need to choose as well, including the number of hidden layers and the number of neurons in each layer. In order to choose these parameters, we use 5-fold cross validation with the `GridSearchCV` function. 
+
+In addition to the MLP, we also train a support vector machine (SVM), linear regression model, and decision tree to compare the performance of classical machine learning methods with the MLP. The accuracy of the different approaches will be compared using the MSE on the test data; the model with the smallest MSE will be considered the "best" model. 
+
+# Results
+
+The result of our k-fold cross validation chose the MLP with .. layers. Table BLANK shows the MSE error for our MLP as well as the classical machine learning methods. 
+
+```{r test_mse}
+```
+
+# Summary and Conclusions
+
+One potential future improvement is  to inclue past information in a time series context. A model that predicts crime rates that have already occurred it of limited utility; ideally, we would want to know how the conditions today will affect violent crime rates next year or next month. One obvious application of this kind of model would be in crime prevention.  If you could accurately predict violent crime rates for a particular community, policymaker would be able to 
+
+# (APPENDIX) Appendix {-} 
+
+# Appendix A
+
+```{python, eval=FALSE, echo=TRUE}
+def findCorrelations(correlations, cutoff=0.9):
+    corr_mat = abs(correlations)
+    varnum = corr_mat.shape[1]
+    tmp = corr_mat.copy(deep=True)
+    np.fill_diagonal(tmp.values, np.nan)
+    maxAbsCorOrder = tmp.apply(np.nanmean, axis=1)
+    maxAbsCorOrder = (-maxAbsCorOrder).argsort().values
+    corr_mat = corr_mat.iloc[list(maxAbsCorOrder), list(maxAbsCorOrder)]
+    del (tmp)
+    deletecol = np.repeat(False, varnum)
+    x2 = corr_mat.copy(deep=True)
+    np.fill_diagonal(x2.values, np.nan)
+    for i in range(varnum):
+        if not (x2[x2.notnull()] > 0.9).any().any():
+            print('No correlations above threshold')
+            break
+        if deletecol[i]:
+            continue
+        for j in np.arange(i + 1, varnum, 1):
+            if (not deletecol[i] and not deletecol[j]):
+                if (corr_mat.iloc[i, j] > cutoff):
+                    mn1 = np.nanmean(x2.iloc[i,])
+                    mn2 = np.nanmean(x2.drop(labels=x2.index[j], axis=0).values)
+                    if (mn1 > mn2):
+                        deletecol[i] = True
+                        x2.iloc[i, :] = np.nan
+                        x2.iloc[:, i] = np.nan
+                    else:
+                        deletecol[j] = True
+                        x2.iloc[j, :] = np.nan
+                        x2.iloc[:, j] = np.nan
+    newOrder = [i for i, x in enumerate(deletecol) if x]
+    return(newOrder)
+```
+
+# References
+
+
