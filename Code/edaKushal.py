@@ -93,6 +93,7 @@ plt.xlabel('Number of Violent Crimes Per 100k Population')
 plt.title('Histogram of Violent Crimes')
 plt.savefig('histogram.png', dpi=300, bbox_inches='tight')
 
+"""
 #subset with race fields
 dfrace = df[['racepctblack','racePctWhite','racePctAsian','racePctHisp','ViolentCrimesPerPop']]
 #pair plot of race and violent crimes
@@ -116,6 +117,7 @@ plt.show()
 corrage = dfage.corr()
 sns.heatmap(corrage, annot=True)
 plt.show()
+"""
 
 
 #check columns with over 50% missing values
@@ -137,115 +139,120 @@ plt.savefig('violent.png')
 X = df.drop('ViolentCrimesPerPop', axis=1)
 y = df['ViolentCrimesPerPop']
 
-"""
-#caused attribute error for correlations b/c numpy
+
 from sklearn.impute import IterativeImputer
 imp = IterativeImputer(max_iter=10, random_state=0)
-Ximpute = imp.fit_transform(X)
-"""
+Ximpute = imp.fit_transform(X[1:])
+Ximpute = pd.DataFrame(Ximpute, columns = X.columns)
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1)
+def modelevalgs(X,y,filename):
+    """
+    evaluate models through grid search
 
-# Highly correlated features
-to_remove = findCorrelations(X_train.corr())
-X_train = X_train.drop(X_train.columns[to_remove], axis=1)
-# Drop police columns with NA values
-X_train = X_train.dropna(axis=1)
-
-
-#--MLP Grid Search--
-piped = Pipeline([('mlp', MLPRegressor(random_state=1))])
-max_neurons = 100
-max_layers = 5
-params = []
-for i in np.arange(2, max_layers + 1, 1):
-    for j in np.arange(5, max_neurons + 1, 5):
-        out = tuple(np.repeat(j + 1, i + 1))
-        params.append(out)
-
-mlpparam = [{'mlp__activation': ['logistic', 'tanh', 'relu'],
-               'mlp__hidden_layer_sizes': params}]
-
-mlpgrid = GridSearchCV(estimator=piped,
-                  param_grid=mlpparam,
-                  scoring='neg_mean_squared_error',
-                  verbose=2,
-                  cv=5)
-
-mlpgrid = mlpgrid.fit(X_train, y_train)
-mlpscore = mlpgrid.best_score_
-mlpparams = mlpgrid.best_params_
+    :param X: dataframe of input variables
+    :param y: dataframe of target variable
+    :param filename: name of file for output table
+    :return: table with hyperparamters for each model with lowest error squared
+    """
 
 
-#--SVM Grid Search--
-svm = svm.SVR()
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1)
 
-svmparam = [{'kernel':('linear','poly','rbf','sigmoid'),
-            'C':(np.arange(1,10,1)),
-            'epsilon':(np.arange(.1,1.1,0.1))}]
-
-svmgrid = GridSearchCV(estimator=svm,
-                       param_grid=svmparam,
-                       scoring='neg_mean_squared_error',
-                       verbose=2,
-                       cv=5)
-
-svmgs = svmgrid.fit(X_train, y_train)
-
-svmscore = svmgrid.best_score_
-svmparams = svmgrid.best_params_
+    # Highly correlated features
+    to_remove = findCorrelations(X_train.corr())
+    X_train = X_train.drop(X_train.columns[to_remove], axis=1)
+    # Drop police columns with NA values
+    X_train = X_train.dropna(axis=1)
 
 
+    #--MLP Grid Search--
+    piped = Pipeline([('mlp', MLPRegressor(random_state=1))])
+    max_neurons = 100
+    max_layers = 5
+    params = []
+    for i in np.arange(2, max_layers + 1, 1):
+        for j in np.arange(5, max_neurons + 1, 5):
+            out = tuple(np.repeat(j + 1, i + 1))
+            params.append(out)
 
-#--DTR Grid Search--
+    mlpparam = [{'mlp__activation': ['logistic', 'tanh', 'relu'],
+                   'mlp__hidden_layer_sizes': params}]
 
-dtr = DecisionTreeRegressor()
-#initially set low to ensure that code will run without errors
-dtrparam = [{'max_features':['auto','sqrt'],
-             'max_depth':(np.arange(10,65,1)),
-              }]
+    mlpgrid = GridSearchCV(estimator=piped,
+                      param_grid=mlpparam,
+                      scoring='neg_mean_squared_error',
+                      verbose=2,
+                      cv=5)
 
-dtrgrid = GridSearchCV(estimator=dtr,
-                       param_grid=dtrparam,
-                       scoring='neg_mean_squared_error',
-                       verbose=2,
-                       cv=5)
-
-dtrgs = dtrgrid.fit(X_train, y_train)
-
-dtrscore = dtrgrid.best_score_
-dtrparams = dtrgrid.best_params_
-
-#--RFR Grid Search--
-rfr = RandomForestRegressor()
-
-#initially set low to ensure that code will run without errors
-rfrparam = [{'n_estimators':(np.arange(50,200,10)),
-             'max_features':['auto','sqrt'],
-             'max_depth':(np.arange(10,50,5)),
-             'bootstrap':[True,False],
-             'warm_start':[True,False]
-            }]
-
-rfrgrid = GridSearchCV(estimator=rfr,
-                       param_grid=rfrparam,
-                       scoring='neg_mean_squared_error',
-                       verbose=2,
-                       cv=5)
-rfrgs = rfrgrid.fit(X_train, y_train)
-rfrscore = rfrgrid.best_score_
-rfrparams = rfrgrid.best_params_
-
-evaltable = pd.DataFrame({
-    'Model': ['SVR', 'DTR', 'RFR', 'MLP'],
-    'Score': [svmscore,dtrscore, rfrscore, mlpscore],
-    'Parameters': [svmparams, dtrparams, rfrparams, rfrparams, mlpparams]
-    })
+    mlpgrid = mlpgrid.fit(X_train, y_train)
+    mlpscore = mlpgrid.best_score_
+    mlpparams = mlpgrid.best_params_
 
 
-evaltable.to_csv('Model Eval.csv',index=False)
+    #--SVM Grid Search--
+    svmr = svm.SVR()
 
+    svmparam = [{'kernel':('linear','poly','rbf','sigmoid'),
+                'C':(np.arange(1,10,1)),
+                'epsilon':(np.arange(.1,1.1,0.1))}]
 
+    svmgrid = GridSearchCV(estimator=svmr,
+                           param_grid=svmparam,
+                           scoring='neg_mean_squared_error',
+                           verbose=2,
+                           cv=5)
+
+    svmgs = svmgrid.fit(X_train, y_train)
+    
+    svmscore = svmgrid.best_score_
+    svmparams = svmgrid.best_params_
+
+    #--DTR Grid Search--
+
+    dtr = DecisionTreeRegressor()
+    #initially set low to ensure that code will run without errors
+    dtrparam = [{'max_features':['auto','sqrt'],
+                 'max_depth':(np.arange(10,65,1)),
+                  }]
+
+    dtrgrid = GridSearchCV(estimator=dtr,
+                           param_grid=dtrparam,
+                           scoring='neg_mean_squared_error',
+                           verbose=2,
+                           cv=5)
+
+    dtrgs = dtrgrid.fit(X_train, y_train)
+
+    dtrscore = dtrgrid.best_score_
+    dtrparams = dtrgrid.best_params_
+
+    #--RFR Grid Search--
+    rfr = RandomForestRegressor()
+
+    rfrparam = [{'n_estimators':(np.arange(50,201,10)),
+                 'max_features':['sqrt'],
+                 'max_depth':(np.arange(10,51,5)),
+                 'bootstrap':[True,False]
+                }]
+
+    rfrgrid = GridSearchCV(estimator=rfr,
+                           param_grid=rfrparam,
+                           scoring='neg_mean_squared_error',
+                           verbose=2,
+                           cv=5)
+    rfrgs = rfrgrid.fit(X_train, y_train)
+    
+    rfrscore = rfrgrid.best_score_
+    rfrparams = rfrgrid.best_params_
+
+    #--Evaluation Table--
+    evaltable = pd.DataFrame({
+        'Model': ['SVR', 'DTR', 'RFR', 'MLP'],
+        'Score': [svmscore,dtrscore, rfrscore, mlpscore],
+        'Parameters': [svmparams, dtrparams, rfrparams, rfrparams, mlpparams]
+        })
+
+    evaltable.to_csv('modeleval-'+filename+'.csv', index=False)
 
 """
 #--Test Model--
@@ -258,3 +265,7 @@ plt.hist(y_test,bins=20, label='y')
 plt.hist(y_pred,bins=20,label='y_pred')
 plt.show()
 """
+
+modelevalgs(X,y,'full')
+
+modelevalgs(Ximpute,y,'impute')
