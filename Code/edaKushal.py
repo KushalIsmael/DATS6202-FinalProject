@@ -142,7 +142,7 @@ y = df['ViolentCrimesPerPop']
 
 from sklearn.impute import IterativeImputer
 imp = IterativeImputer(max_iter=10, random_state=0)
-Ximpute = imp.fit_transform(X[1:])
+Ximpute = imp.fit_transform(X)
 Ximpute = pd.DataFrame(Ximpute, columns = X.columns)
 
 def modelevalgs(X,y,filename):
@@ -249,7 +249,7 @@ def modelevalgs(X,y,filename):
     evaltable = pd.DataFrame({
         'Model': ['SVR', 'DTR', 'RFR', 'MLP'],
         'Score': [svmscore,dtrscore, rfrscore, mlpscore],
-        'Parameters': [svmparams, dtrparams, rfrparams, rfrparams, mlpparams]
+        'Parameters': [svmparams, dtrparams, rfrparams, mlpparams]
         })
 
     evaltable.to_csv('modeleval-'+filename+'.csv', index=False)
