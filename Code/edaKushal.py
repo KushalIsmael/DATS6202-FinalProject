@@ -152,6 +152,7 @@ X_train = X_train.drop(X_train.columns[to_remove], axis=1)
 # Drop police columns with NA values
 X_train = X_train.dropna(axis=1)
 
+
 #--MLP Grid Search--
 piped = Pipeline([('mlp', MLPRegressor(random_state=1))])
 max_neurons = 100
@@ -174,6 +175,7 @@ mlpgrid = GridSearchCV(estimator=piped,
 mlpgrid = mlpgrid.fit(X_train, y_train)
 mlpscore = mlpgrid.best_score_
 mlpparams = mlpgrid.best_params_
+
 
 #--SVM Grid Search--
 svm = svm.SVR()
@@ -221,7 +223,6 @@ rfr = RandomForestRegressor()
 rfrparam = [{'n_estimators':(np.arange(50,200,10)),
              'max_features':['auto','sqrt'],
              'max_depth':(np.arange(10,50,5)),
-             'min_sample_leaf':(np.arange(20,60,5)),
              'bootstrap':[True,False],
              'warm_start':[True,False]
             }]
@@ -238,11 +239,22 @@ rfrparams = rfrgrid.best_params_
 evaltable = pd.DataFrame({
     'Model': ['SVR', 'DTR', 'RFR', 'MLP'],
     'Score': [svmscore,dtrscore, rfrscore, mlpscore],
-    'Parameters': [svmparams, dtrparams, rfrparams, rfrparams]
+    'Parameters': [svmparams, dtrparams, rfrparams, rfrparams, mlpparams]
     })
 
 
 evaltable.to_csv('Model Eval.csv',index=False)
 
-evaltable = evaltable.style.background_gradient(cmap='Blues')
-plt.savefig('Model Eval.png', dpi=300, bbox_inches='tight')
+
+
+"""
+#--Test Model--
+mlp = MLPRegressor(hidden_layer_sizes=(96,96,96,96,96,96),activation='tanh')
+mlp.fit(X_train,y_train)
+#todo impute X_test null values
+y_pred = mlp.predict(X_test)
+plt.fig(3)
+plt.hist(y_test,bins=20, label='y')
+plt.hist(y_pred,bins=20,label='y_pred')
+plt.show()
+"""
