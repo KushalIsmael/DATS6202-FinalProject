@@ -6,10 +6,12 @@ import seaborn as sns
 from pandas.plotting import scatter_matrix
 
 from sklearn import svm
+from sklearn.metrics import mean_squared_error
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import GridSearchCV
 from sklearn.neural_network import MLPRegressor
 from sklearn.experimental import enable_iterative_imputer
+from sklearn.impute import IterativeImputer
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.model_selection import train_test_split
@@ -17,6 +19,12 @@ from sklearn.model_selection import train_test_split
 
 # Functions
 def findCorrelations(correlations, cutoff=0.9):
+    """
+
+    :param correlations:
+    :param cutoff:
+    :return:
+    """
     corr_mat = abs(correlations)
     varnum = corr_mat.shape[1]
     original_order = np.arange(0, varnum + 1, 1)
@@ -93,33 +101,6 @@ plt.xlabel('Number of Violent Crimes Per 100k Population')
 plt.title('Histogram of Violent Crimes')
 plt.savefig('histogram.png', dpi=300, bbox_inches='tight')
 
-"""
-#subset with race fields
-dfrace = df[['racepctblack','racePctWhite','racePctAsian','racePctHisp','ViolentCrimesPerPop']]
-#pair plot of race and violent crimes
-plt.title('Pair Plot of Race and Violent Crimes')
-sns.pairplot(dfrace)
-plt.show()
-
-#correlation matrix of % race and violent crimes
-corrace = dfrace.corr()
-sns.heatmap(corrace, annot=True)
-plt.show()
-
-#subset with age fields
-dfage = df[['agePct12t21','agePct12t29','agePct16t24','agePct65up','ViolentCrimesPerPop']]
-#pair plot for age and violent crimes
-sns.pairplot(dfage)
-plt.title('Pair Plot of Age and Violent Crimes')
-plt.show()
-
-#correlation matrix for age and violent crimes
-corrage = dfage.corr()
-sns.heatmap(corrage, annot=True)
-plt.show()
-"""
-
-
 #check columns with over 50% missing values
 print(missing.where(missing>50))
 #check for total null values in df
@@ -140,7 +121,7 @@ X = df.drop('ViolentCrimesPerPop', axis=1)
 y = df['ViolentCrimesPerPop']
 
 
-from sklearn.impute import IterativeImputer
+
 imp = IterativeImputer(max_iter=10, random_state=0)
 Ximpute = imp.fit_transform(X)
 Ximpute = pd.DataFrame(Ximpute, columns = X.columns)
@@ -185,6 +166,10 @@ def modelevalgs(X,y,filename):
                       cv=5)
 
     mlpgrid = mlpgrid.fit(X_train, y_train)
+
+    mlp_pred = mlpgrid.predict(X_test)
+    mlpmse = mean_squared_error(y_test, mlp_pred)
+
     mlpscore = mlpgrid.best_score_
     mlpparams = mlpgrid.best_params_
 
@@ -203,6 +188,9 @@ def modelevalgs(X,y,filename):
                            cv=5)
 
     svmgs = svmgrid.fit(X_train, y_train)
+
+    svm_pred = svmgrid.predict(X_test)
+    svmmse = mean_squared_error(y_test, svm_pred)
     
     svmscore = svmgrid.best_score_
     svmparams = svmgrid.best_params_
@@ -223,6 +211,9 @@ def modelevalgs(X,y,filename):
 
     dtrgs = dtrgrid.fit(X_train, y_train)
 
+    dtr_pred = dtrgrid.predict(X_test)
+    dtrmse = mean_squared_error(y_test, dtr_pred)
+
     dtrscore = dtrgrid.best_score_
     dtrparams = dtrgrid.best_params_
 
@@ -241,30 +232,27 @@ def modelevalgs(X,y,filename):
                            verbose=2,
                            cv=5)
     rfrgs = rfrgrid.fit(X_train, y_train)
+
+    rfr_pred = rfrgrid.predict(X_test)
+    rfrmse = mean_squared_error(y_test, rfr_pred)
     
     rfrscore = rfrgrid.best_score_
     rfrparams = rfrgrid.best_params_
 
+
+
     #--Evaluation Table--
     evaltable = pd.DataFrame({
         'Model': ['SVR', 'DTR', 'RFR', 'MLP'],
-        'Score': [svmscore,dtrscore, rfrscore, mlpscore],
+        'Negative Mean Square Error': [svmscore,dtrscore, rfrscore, mlpscore],
+        'Mean Square Error': [svmmse, dtrmse, rfrmse, mlpmse],
         'Parameters': [svmparams, dtrparams, rfrparams, mlpparams]
         })
 
-    evaltable.to_csv('modeleval-'+filename+'.csv', index=False)
+    #--Rank--
+    evaltable['Rank'] = df['Mean Square Error'].rank(method='max',ascending=False)
 
-"""
-#--Test Model--
-mlp = MLPRegressor(hidden_layer_sizes=(96,96,96,96,96,96),activation='tanh')
-mlp.fit(X_train,y_train)
-#todo impute X_test null values
-y_pred = mlp.predict(X_test)
-plt.fig(3)
-plt.hist(y_test,bins=20, label='y')
-plt.hist(y_pred,bins=20,label='y_pred')
-plt.show()
-"""
+    evaltable.to_csv('modeleval-'+filename+'.csv', index=False)
 
 modelevalgs(X,y,'full')
 
