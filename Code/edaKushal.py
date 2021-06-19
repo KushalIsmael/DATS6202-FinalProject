@@ -167,7 +167,7 @@ def modelevalgs(X,y,filename):
 
     #--MLP Grid Search--
     piped = Pipeline([('mlp', MLPRegressor(random_state=1))])
-    max_neurons = 100
+    max_neurons = 120
     max_layers = 5
     params = []
     for i in np.arange(2, max_layers + 1, 1):
