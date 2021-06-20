@@ -147,9 +147,12 @@ def modelevalgs(X,y,filename):
     # Drop police columns with NA values
     X_train = X_train.dropna(axis=1)
     X_test = X_test.dropna(axis=1)
+    X_test = X_test.drop(columns=['OtherPerCap'])
+    print(X_test.shape, X_train.shape)
 
 
     #--MLP Grid Search--
+
     piped = Pipeline([('mlp', MLPRegressor(random_state=1))])
     max_neurons = 120
     max_layers = 5
@@ -166,15 +169,16 @@ def modelevalgs(X,y,filename):
                       param_grid=mlpparam,
                       scoring='neg_mean_squared_error',
                       verbose=2,
+                      refit = True,
                       cv=5)
 
     mlpgrid = mlpgrid.fit(X_train, y_train)
 
-    mlp_pred = mlpgrid.predict(X_test)
+    mlp_pred = mlpgrid.predict(X_train)
 
-    mlpmse = mean_squared_error(y_test, mlp_pred)
+    mlpmse = mean_squared_error(y_train, mlp_pred)
 
-    mlpr2 = r2_score(y_test, mlp_pred)
+    mlpr2 = r2_score(y_train, mlp_pred)
 
     mlpscore = mlpgrid.best_score_
 
@@ -192,6 +196,7 @@ def modelevalgs(X,y,filename):
                            param_grid=svmparam,
                            scoring='neg_mean_squared_error',
                            verbose=2,
+                           refit = True,
                            cv=5)
 
     svmgs = svmgrid.fit(X_train, y_train)
@@ -215,6 +220,7 @@ def modelevalgs(X,y,filename):
                            param_grid=dtrparam,
                            scoring='neg_mean_squared_error',
                            verbose=2,
+                           refit=True,
                            cv=5)
 
     dtrgs = dtrgrid.fit(X_train, y_train)
@@ -240,6 +246,7 @@ def modelevalgs(X,y,filename):
                            param_grid=rfrparam,
                            scoring='neg_mean_squared_error',
                            verbose=2,
+                           refit=True,
                            cv=5)
     rfrgs = rfrgrid.fit(X_train, y_train)
 
@@ -261,9 +268,6 @@ def modelevalgs(X,y,filename):
         'R^2 Score': [svmr2, dtrr2, rfrr2, mlpr2],
         'Parameters': [svmparams, dtrparams, rfrparams, mlpparams]
         })
-
-    #--Rank--
-    evaltable['Rank'] = df['Mean Square Error'].rank(method='max',ascending=False)
 
     evaltable.to_csv('modeleval-'+filename+'.csv', index=False)
 
