@@ -6,7 +6,10 @@ The files in this repo are organized and contained in the following folders:
 1. **Proposal**
    - A proposal for our project
 2. **Code**
-   - The Python code and dataset for our project
+This folder contains our data, two code files, output plots files from our code.
+The "2.gridsearch" file can take 80 minutes to run depending on your computer. Run the file "1. model" which will pull the values from our gridsearch results.
+   - 1. model
+   - 2. gridsearch
 3. **Final Report**
    - A final written report that explains the data, setup, and results of the project.
 4. **Presentation**
