@@ -120,11 +120,13 @@ plt.savefig('violent.png')
 X = df.drop('ViolentCrimesPerPop', axis=1)
 y = df['ViolentCrimesPerPop']
 
-
-
 imp = IterativeImputer(max_iter=10, random_state=0)
 Ximpute = imp.fit_transform(X)
 Ximpute = pd.DataFrame(Ximpute, columns = X.columns)
+
+to_remove = findCorrelations(X.corr())
+X = X.drop(X.columns[to_remove], axis=1)
+X = X.dropna(axis=1)
 
 def modelevalgs(X,y,filename):
     """
@@ -136,20 +138,7 @@ def modelevalgs(X,y,filename):
     :return: table with hyperparamters for each model with lowest error squared
     """
 
-
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1)
-
-    # Highly correlated features
-    to_remove = findCorrelations(X_train.corr())
-    X_train = X_train.drop(X_train.columns[to_remove], axis=1)
-    X_test = X_test.drop(X_test.columns[to_remove], axis=1)
-
-    # Drop police columns with NA values
-    X_train = X_train.dropna(axis=1)
-    X_test = X_test.dropna(axis=1)
-    X_test = X_test.drop(columns=['OtherPerCap'])
-    print(X_test.shape, X_train.shape)
-
 
     #--MLP Grid Search--
 

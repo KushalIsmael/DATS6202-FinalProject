@@ -1,5 +1,5 @@
-Model,Score,Parameters
-SVR,-0.01854099466973217,"{'C': 1, 'epsilon': 0.1, 'kernel': 'rbf'}"
-DTR,-0.036060217629337116,"{'max_depth': 13, 'max_features': 'auto'}"
-RFR,-0.017860837466408548,"{'bootstrap': False, 'max_depth': 20, 'max_features': 'sqrt', 'n_estimators': 130}"
-MLP,-0.018180837312465285,"{'mlp__activation': 'tanh', 'mlp__hidden_layer_sizes': (96, 96, 96)}"
+Model,Negative Mean Squared Error,Mean Squared Error,R^2 Score,Parameters
+SVR,-0.01843814727981964,0.01978193675793794,0.613457447480644,"{'C': 1, 'epsilon': 0.1, 'kernel': 'rbf'}"
+DTR,-0.035517868338557995,0.03953609022556391,0.22745778538127004,"{'max_depth': 37, 'max_features': 'sqrt'}"
+RFR,-0.0176229669571263,0.01838416926214921,0.640770072238377,"{'bootstrap': False, 'max_depth': 20, 'max_features': 'sqrt', 'n_estimators': 180}"
+MLP,-0.017663946406473296,0.014973077762507888,0.7276866566789151,"{'mlp__activation': 'tanh', 'mlp__hidden_layer_sizes': (31, 31, 31)}"

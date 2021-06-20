@@ -91,18 +91,11 @@ df = df.drop(columns =['state','county','communityname','community','fold',])
 
 X = df.drop('ViolentCrimesPerPop', axis=1)
 y = df['ViolentCrimesPerPop']
+to_remove = findCorrelations(X.corr())
+X = X.drop(X.columns[to_remove], axis=1)
+X = X.dropna(axis=1)
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1)
-
-# Highly correlated features
-to_remove = findCorrelations(X_train.corr())
-X_train = X_train.drop(X_train.columns[to_remove], axis=1)
-X_test = X_test.drop(X_test.columns[to_remove], axis=1)
-
-# Drop police columns with NA values
-X_train = X_train.dropna(axis=1)
-X_test = X_test.dropna(axis=1)
-X_test = X_test.drop(columns=['OtherPerCap'])
 
 print(X_train.shape, X_test.shape)
 
@@ -134,6 +127,19 @@ plt.legend()
 plt.savefig('Histogram Comparison', dpi=300, bbox_inches='tight')
 
 
+
+def policetest(feature):
+    meantest = X.mean()
+    feature = str(feature)
+    actual = meantest[feature]
+    test = []
+    for i in range(0,1.1,0.1):
+        meantest[feature] = i
+        test.append(y_pred = mlp.predict(meantest))
+    return test
+
+
+policetest('PolicOperBudg')
 
 
 
