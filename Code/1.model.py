@@ -112,15 +112,18 @@ def findCorrelations(correlations, cutoff=0.9):
     newOrder = [i for i, x in enumerate(deletecol) if x]
     return(newOrder)
 
-#remove highly correlated features
-to_remove = findCorrelations(X.corr())
-X = X.drop(X.columns[to_remove], axis=1)
+
 
 #remove columns with null values
 X = X.dropna(axis=1)
 
 #train-test split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1)
+
+#remove highly correlated features
+to_remove = findCorrelations(X_train.corr())
+X_train = X_train.drop(X_train.columns[to_remove], axis=1)
+X_test = X_test.drop(X_test.columns[to_remove], axis=1)
 
 print("X_train shape:", X_train.shape, "\nX_test shape:", X_test.shape)
 
@@ -130,12 +133,12 @@ if best_model.iloc[0][1] == 'MLP':
     mlp.fit(X_train, y_train)
     y_pred = mlp.predict(X_test)
 
-elif best_model['Model'] == 'RFR':
+elif best_model.iloc[0][1] == 'RFR':
     rfr = RandomForestRegressor(bootstrap=params['bootstrap'], max_depth=params['max_depth'], max_features='sqrt', n_estimators=params['n_estimators'])
     rfr.fit(X_train, y_train)
     y_pred = rfr.predict(X_test)
 
-elif best_model['Model'] == 'DTR':
+elif best_model.iloc[0][1] == 'DTR':
     dtr = DecisionTreeRegressor(max_depth=params['max_depth'],max_features=params['max_features'])
     dtr.fit(X_train, y_train)
     y_pred = dtr.predict(X_test)
@@ -160,11 +163,13 @@ def policetest(feature):
     Test and plot change in predicted values by change in police features
 
     :param feature: name of feature to test
+
     :return: scatter plot of change in values
     """
 
     #Create test value of mean values for each feature
     meantest = X.mean().to_frame().transpose()
+    meantest = meantest.drop(meantest.columns[to_remove], axis=1)
     feature = str(feature)
 
     #empty array to hold predicted values
