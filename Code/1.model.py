@@ -2,25 +2,80 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+from sklearn.experimental import enable_iterative_imputer
+from sklearn.impute import IterativeImputer
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.svm import SVR
-from sklearn import svm
 
-model = pd.read_csv('modeleval-full.csv')
+#-- Read in model evaluation data --
+model = pd.read_csv('modeleval-impute.csv')
+#rank models by lowest MSE
+model['Rank'] = model['Mean Squared Error'].rank()
 
 best_model = model.loc[model['Rank']==1].reset_index()
+#hold parameters from highest ranked model
 paramsdict = best_model['Parameters'].to_dict()
 params = eval(paramsdict[0])
 
+#-- Read in data --
+
+# Declare an empty list to store each line
+lines = []
+# Open communities.names for reading text data.
+with open ('communities.names', 'rt') as attributes:
+    for line in attributes:
+        #split each line and keep 2nd element
+        lines.append(line.split()[1])
+
+# Read in communities data
+df = pd.read_csv('communities.data',header=None)
+# Add column names
+df.columns = lines
+
+#check size of dataframe
+print("Shape:", df.shape)
+
+# Check first 10 rows
+print("Head:\n", df.head(10))
+# Check info of dataset
+
+print("Statistics of dataset:\n", df.info(verbose=True))
+# replace ? values with numpy nan
+df = df.replace('?',np.nan)
+
+# Find the number of columns with missing values
+print("Number of columns with nulls:", df.isnull().any().sum(axis=0))
+
+missing = df.isnull().sum()/(len(df))*100
+#check columns with over 50% missing values
+print("Over 50% Null:\n", missing.where(missing>50))
+#check for total null values in df
+print("Total Nulls:",df.isnull().sum().sum())
+
+#drop non predictive fields
+df = df.drop(columns =['state','county','communityname','community','fold',])
+
+#set X and y
+X = df.drop('ViolentCrimesPerPop', axis=1)
+y = df['ViolentCrimesPerPop']
+columns = X.columns
+
+#impute X values
+imp = IterativeImputer(max_iter=10, random_state=0)
+X = imp.fit_transform(X)
+X = pd.DataFrame(X, columns = columns)
+
 def findCorrelations(correlations, cutoff=0.9):
     """
+    Find highly correlated features
 
-    :param correlations:
-    :param cutoff:
-    :return:
+    :param correlations: correlation matrix
+    :param cutoff: max correlation
+
+    :return: highly correlated features
     """
     corr_mat = abs(correlations)
     varnum = corr_mat.shape[1]
@@ -57,48 +112,19 @@ def findCorrelations(correlations, cutoff=0.9):
     newOrder = [i for i, x in enumerate(deletecol) if x]
     return(newOrder)
 
-# Declare an empty list to store each line
-lines = []
-# Open communities.names for reading text data.
-with open ('communities.names', 'rt') as attributes:
-    for line in attributes:
-        #split each line and keep 2nd element
-        lines.append(line.split()[1])
-
-# Read in communities data
-df = pd.read_csv('communities.data',header=None)
-# Add column names
-df.columns = lines
-#check size of dataframe
-print(df.shape)
-# Check first 10 rows
-print(df.head(10))
-# Check info of dataset
-print(df.info(verbose=True))
-# replace ? values with numpy nan
-df = df.replace('?',np.nan)
-# Find the number of columns with missing values
-print(df.isnull().any().sum(axis=0))
-#check % null values in each column
-missing = df.isnull().sum()/(len(df))*100
-print(missing)
-#check columns with over 50% missing values
-print(missing.where(missing>50))
-#check for total null values in df
-print(df.isnull().sum().sum())
-#drop non predictive fields
-df = df.drop(columns =['state','county','communityname','community','fold',])
-
-X = df.drop('ViolentCrimesPerPop', axis=1)
-y = df['ViolentCrimesPerPop']
+#remove highly correlated features
 to_remove = findCorrelations(X.corr())
 X = X.drop(X.columns[to_remove], axis=1)
+
+#remove columns with null values
 X = X.dropna(axis=1)
 
+#train-test split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1)
 
-print(X_train.shape, X_test.shape)
+print("X_train shape:", X_train.shape, "\nX_test shape:", X_test.shape)
 
+#-- Model --
 if best_model.iloc[0][1] == 'MLP':
     mlp = MLPRegressor(hidden_layer_sizes=params['mlp__hidden_layer_sizes'], activation=params['mlp__activation'])
     mlp.fit(X_train, y_train)
@@ -119,6 +145,7 @@ else :
     svmr.fit(X_train, y_train)
     y_pred = svmr.predict(X_test)
 
+#-- Plot Comparison --
 plt.figure(0)
 plt.title('Violent Crimes per Population Comparison')
 plt.hist(y_test,bins=20,label='Actual',alpha=0.5)
@@ -129,16 +156,37 @@ plt.savefig('Histogram Comparison', dpi=300, bbox_inches='tight')
 
 
 def policetest(feature):
-    meantest = X.mean()
+    """
+    Test and plot change in predicted values by change in police features
+
+    :param feature: name of feature to test
+    :return: scatter plot of change in values
+    """
+
+    #Create test value of mean values for each feature
+    meantest = X.mean().to_frame().transpose()
     feature = str(feature)
-    actual = meantest[feature]
-    test = []
-    for i in range(0,1.1,0.1):
+
+    #empty array to hold predicted values
+    predictions = []
+    #each new value to test
+    val = np.arange(0,1.01,0.01)
+
+    for i in val:
         meantest[feature] = i
-        test.append(y_pred = mlp.predict(meantest))
-    return test
+        pred = mlp.predict(meantest)
+        predictions.append(pred)
 
+    #create scatter plot of change in feature and prediction value
+    plt.figure(1).clear(True)
+    plt.figure(1)
+    plt.title("Change in Predicted Violent Crimes per Population by Change in "+feature)
+    plt.xlabel(feature)
+    plt.ylabel('Predicted Violent Crimes per Population')
+    plt.scatter(val,predictions)
+    plt.savefig("Scatter-"+feature, dpi=300, bbox_inches='tight')
 
+policetest('PolicPerPop')
 policetest('PolicOperBudg')
 
 
