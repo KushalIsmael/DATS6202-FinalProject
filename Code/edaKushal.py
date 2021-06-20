@@ -2,8 +2,6 @@ import pandas as pd
 import numpy as np
 
 import matplotlib.pyplot as plt
-import seaborn as sns
-from pandas.plotting import scatter_matrix
 
 from sklearn import svm
 from sklearn.metrics import mean_squared_error, r2_score
@@ -16,51 +14,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.model_selection import train_test_split
 
-
-# Functions
-def findCorrelations(correlations, cutoff=0.9):
-    """
-
-    :param correlations:
-    :param cutoff:
-    :return:
-    """
-    corr_mat = abs(correlations)
-    varnum = corr_mat.shape[1]
-    original_order = np.arange(0, varnum + 1, 1)
-    tmp = corr_mat.copy(deep=True)
-    np.fill_diagonal(tmp.values, np.nan)
-    maxAbsCorOrder = tmp.apply(np.nanmean, axis=1)
-    maxAbsCorOrder = (-maxAbsCorOrder).argsort().values
-    corr_mat = corr_mat.iloc[list(maxAbsCorOrder), list(maxAbsCorOrder)]
-    newOrder = original_order[list(maxAbsCorOrder)]
-    del (tmp)
-    deletecol = np.repeat(False, varnum)
-    x2 = corr_mat.copy(deep=True)
-    np.fill_diagonal(x2.values, np.nan)
-    for i in range(varnum):
-        if not (x2[x2.notnull()] > 0.9).any().any():
-            print('No correlations above threshold')
-            break
-        if deletecol[i]:
-            continue
-        for j in np.arange(i + 1, varnum, 1):
-            if (not deletecol[i] and not deletecol[j]):
-                if (corr_mat.iloc[i, j] > cutoff):
-                    mn1 = np.nanmean(x2.iloc[i,])
-                    mn2 = np.nanmean(x2.drop(labels=x2.index[j], axis=0).values)
-                    if (mn1 > mn2):
-                        deletecol[i] = True
-                        x2.iloc[i, :] = np.nan
-                        x2.iloc[:, i] = np.nan
-                    else:
-                        deletecol[j] = True
-                        x2.iloc[j, :] = np.nan
-                        x2.iloc[:, j] = np.nan
-    newOrder = [i for i, x in enumerate(deletecol) if x]
-    return(newOrder)
-
-
+#-- Read in data --
 
 # Declare an empty list to store each line
 lines = []
@@ -87,7 +41,8 @@ print(df.isnull().any().sum(axis=0))
 #check % null values in each column
 missing = df.isnull().sum()/(len(df))*100
 print(missing)
-# Make plots
+
+# Plot of features with nulls
 plt.figure(0)
 missing[missing > 0].plot.barh()
 plt.ylabel('Feature')
@@ -95,6 +50,7 @@ plt.xlabel('Percent')
 # plt.xticks(rotation=80)
 plt.savefig('missing.png', dpi=300, bbox_inches='tight')
 
+# Histogram of target
 plt.figure(1)
 plt.hist(df['ViolentCrimesPerPop'])
 plt.xlabel('Number of Violent Crimes Per 100k Population')
@@ -115,18 +71,14 @@ plt.ylabel('Total number of violent crimes per 100K population')
 plt.xlabel('Community index')
 plt.savefig('violent.png')
 
-# Impute missing values
-
+# Set X and y
 X = df.drop('ViolentCrimesPerPop', axis=1)
 y = df['ViolentCrimesPerPop']
 
+# Impute missing values
 imp = IterativeImputer(max_iter=10, random_state=0)
 Ximpute = imp.fit_transform(X)
 Ximpute = pd.DataFrame(Ximpute, columns = X.columns)
-
-to_remove = findCorrelations(X.corr())
-X = X.drop(X.columns[to_remove], axis=1)
-X = X.dropna(axis=1)
 
 def modelevalgs(X,y,filename):
     """
@@ -138,7 +90,62 @@ def modelevalgs(X,y,filename):
     :return: table with hyperparamters for each model with lowest error squared
     """
 
+    #drop any null values
+    X = X.dropna(axis=1)
+
+    #train test spit
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1)
+    print(X_train.shape, X_test.shape)
+
+    def findCorrelations(correlations, cutoff=0.9):
+        """
+        Find highly correlated features
+
+        :param correlations: correlation matrix
+        :param cutoff: max correlation
+
+        :return: highly correlated features
+        """
+        corr_mat = abs(correlations)
+        varnum = corr_mat.shape[1]
+        original_order = np.arange(0, varnum + 1, 1)
+        tmp = corr_mat.copy(deep=True)
+        np.fill_diagonal(tmp.values, np.nan)
+        maxAbsCorOrder = tmp.apply(np.nanmean, axis=1)
+        maxAbsCorOrder = (-maxAbsCorOrder).argsort().values
+        corr_mat = corr_mat.iloc[list(maxAbsCorOrder), list(maxAbsCorOrder)]
+        newOrder = original_order[list(maxAbsCorOrder)]
+        del (tmp)
+        deletecol = np.repeat(False, varnum)
+        x2 = corr_mat.copy(deep=True)
+        np.fill_diagonal(x2.values, np.nan)
+        for i in range(varnum):
+            if not (x2[x2.notnull()] > 0.9).any().any():
+                print('No correlations above threshold')
+                break
+            if deletecol[i]:
+                continue
+            for j in np.arange(i + 1, varnum, 1):
+                if (not deletecol[i] and not deletecol[j]):
+                    if (corr_mat.iloc[i, j] > cutoff):
+                        mn1 = np.nanmean(x2.iloc[i,])
+                        mn2 = np.nanmean(x2.drop(labels=x2.index[j], axis=0).values)
+                        if (mn1 > mn2):
+                            deletecol[i] = True
+                            x2.iloc[i, :] = np.nan
+                            x2.iloc[:, i] = np.nan
+                        else:
+                            deletecol[j] = True
+                            x2.iloc[j, :] = np.nan
+                            x2.iloc[:, j] = np.nan
+        newOrder = [i for i, x in enumerate(deletecol) if x]
+
+        return (newOrder)
+
+    #remove highly correlated features
+    to_remove = findCorrelations(X_train.corr())
+    X_train = X_train.drop(X_train.columns[to_remove], axis=1)
+    X_test = X_test.drop(X_test.columns[to_remove], axis=1)
 
     #--MLP Grid Search--
 
@@ -247,8 +254,6 @@ def modelevalgs(X,y,filename):
     rfrscore = rfrgrid.best_score_
     rfrparams = rfrgrid.best_params_
 
-
-
     #--Evaluation Table--
     evaltable = pd.DataFrame({
         'Model': ['SVR', 'DTR', 'RFR', 'MLP'],
@@ -258,8 +263,11 @@ def modelevalgs(X,y,filename):
         'Parameters': [svmparams, dtrparams, rfrparams, mlpparams]
         })
 
+    # Save results as csv file
     evaltable.to_csv('modeleval-'+filename+'.csv', index=False)
 
+# Model evaluation on full data
 modelevalgs(X,y,'full')
 
+# Model evaluation on imputed data
 modelevalgs(Ximpute,y,'impute')
