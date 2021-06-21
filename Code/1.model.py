@@ -11,9 +11,15 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.svm import SVR
 
 #-- Read in model evaluation data --
-model = pd.read_csv('modeleval-impute.csv')
+modelimpute = pd.read_csv('modeleval-impute.csv')
+modelimpute['Data'] = "impute"
+modelfull = pd.read_csv('modeleval-full.csv')
+modelfull['Data'] = "full"
+
+model = pd.concat([modelimpute,modelfull])
+
 #rank models by lowest MSE
-model['Rank'] = model['Mean Squared Error'].rank()
+model['Rank'] = model['Mean Squared Error'].rank(ascending=True)
 
 best_model = model.loc[model['Rank']==1].reset_index()
 #hold parameters from highest ranked model
@@ -64,9 +70,10 @@ y = df['ViolentCrimesPerPop']
 columns = X.columns
 
 #impute X values
-imp = IterativeImputer(max_iter=10, random_state=0)
-X = imp.fit_transform(X)
-X = pd.DataFrame(X, columns = columns)
+if best_model.iloc[0][6] == 'impute':
+    imp = IterativeImputer(max_iter=10, random_state=0)
+    X = imp.fit_transform(X)
+    X = pd.DataFrame(X, columns = columns)
 
 def findCorrelations(correlations, cutoff=0.9):
     """
@@ -158,7 +165,7 @@ plt.savefig('Histogram Comparison', dpi=300, bbox_inches='tight')
 
 
 
-def policetest(feature):
+def featuretest(feature):
     """
     Test and plot change in predicted values by change in police features
 
@@ -175,14 +182,14 @@ def policetest(feature):
     #empty array to hold predicted values
     predictions = []
     #each new value to test
-    val = np.arange(0,1.01,0.01)
+    val = np.arange(0,1.01,0.05)
 
     for i in val:
         meantest[feature] = i
         pred = mlp.predict(meantest)
         predictions.append(pred)
 
-    #create scatter plot of change in feature and prediction value
+    # create scatter plot of change in feature and prediction value
     plt.figure(1).clear(True)
     plt.figure(1)
     plt.title("Change in Predicted Violent Crimes per Population by Change in "+feature)
@@ -191,8 +198,18 @@ def policetest(feature):
     plt.scatter(val,predictions)
     plt.savefig("Scatter-"+feature, dpi=300, bbox_inches='tight')
 
-policetest('PolicPerPop')
-policetest('PolicOperBudg')
+if best_model.iloc[0][6] == 'impute':
+    featuretest('PolicPerPop')
+    featuretest('PolicOperBudg')
+
+else:
+    featuretest('PctUnemployed')
+    featuretest('PctEmploy')
+    featuretest('PopDens')
+    featuretest('LandArea')
+
+
+
 
 
 
