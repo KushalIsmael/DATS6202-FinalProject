@@ -94,6 +94,12 @@ In addition to the MLP, we also train a support vector machine (SVM), random for
 
 # Results
 
+Figure \@ref(fig:our-mlp) shows the final neuron architecture for the MLP on the nonimputed data.
+
+```{r our-mlp, out.width="85%", fig.align='center', fig.cap = "Chosen MLP"}
+knitr::include_graphics('MLP_Network_Drawing.png')
+```
+
 Table \@ref(tab:non) shows the model results for the classical machine learning methods and the MLP on the non-imputed data. In this case, the 5-fold CV chose a ReLu activation funciton and four hidden layers, each with 51 neurons. This MLP is superior to all the other classical ML models on both the test and training data. Table \@ref(tab:impute) shows the same thing except on the non-imputed data. 
 
 ```{r non}
