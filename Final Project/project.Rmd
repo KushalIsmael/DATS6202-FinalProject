@@ -122,14 +122,14 @@ We see that, for the imputed data, the MLP model is not the unambiguous winner, 
 Figure \@ref(fig:predict) shows a histogram of violent crime rates for the actual and predicted values using the best MLP model from non-imputed data.  
 
 ```{r predict, out.width="60%", fig.align='center', fig.cap = "Violent Crime Per Population Comparison (Test Data)"}
-knitr::include_graphics('/home/mkosko/PycharmProjects/machineLearning/Histogram Comparison.png')
+knitr::include_graphics('/home/mkosko/PycharmProjects/machineLearning/Histogram_Comparison.png')
 ```
 
 To illustrate a real world application of our model, we next show how it can be used to assess how changes in a feature are associated with changes in the violent crime rate. We construct an "average" community, where all features are set to the average levels in the dataset. Then, we check the predicted values of violent crime rate across a range of values for a particular variables.  Thus, in the same way that coefficient estimates in OLS regression allow us to make the *ceteris paribus* interpretations about how the outcome variable changes with changes in a feature, we can see how altering feature values changes the outcome, holding all else constant. 
 
 Figure \@ref(fig:features) shows the predicted crime rate for the constructed "average" community where three features are varied across the 0-1 interval. We see, unsurprisingly, that the violent crime rate increases with the unemployment rate (and correspondingly decreases with the employment rate). 
 
-```{r features, echo=FALSE,out.width="49%", out.height="20%",fig.cap="caption",fig.show='hold',fig.align='center'}
+```{r features, echo=FALSE,out.width="49%", out.height="20%",fig.cap="Predicted Violent Crime with Varying Features",fig.show='hold',fig.align='center'}
 knitr::include_graphics(c('/home/mkosko/PycharmProjects/machineLearning/Scatter-PopDens.png',
                           '/home/mkosko/PycharmProjects/machineLearning/Scatter-LandArea.png',
                           '/home/mkosko/PycharmProjects/machineLearning/Scatter-PctUnemployed.png',
