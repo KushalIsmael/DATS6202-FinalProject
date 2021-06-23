@@ -96,7 +96,7 @@ In addition to the MLP, we also train a support vector machine (SVM), random for
 
 Figure \@ref(fig:our-mlp) shows the final neuron architecture for the MLP on the nonimputed data.
 
-```{r our-mlp, out.width="85%", fig.align='center', fig.cap = "Chosen MLP"}
+```{r our-mlp, out.width="99%", fig.align='center', fig.cap = "Chosen MLP"}
 knitr::include_graphics('MLP_Network_Drawing.png')
 ```
 
