@@ -69,7 +69,7 @@ knitr::include_graphics('/home/mkosko/PycharmProjects/machineLearning/violent.pn
 
 
 ## Solver
-- Rather than stochastic gradient descent, use `L-BFGS` solver (imited memory Broyden–Fletcher–Goldfarb–Shanno) [@aggarwal2018neural, p. 148]
+- Rather than stochastic gradient descent, use `L-BFGS` solver (limited memory Broyden–Fletcher–Goldfarb–Shanno) [@aggarwal2018neural, p. 148]
 - Approximates Newton method: 
 
 \[
@@ -92,7 +92,7 @@ knitr::include_graphics('/home/mkosko/PycharmProjects/machineLearning/violent.pn
 
 ## Model Architecture
 
-```{r our-mlp, out.width="85%", fig.align='center', fig.cap = "Chosen MLP"}
+```{r our-mlp, out.width="99%", fig.align='left', fig.cap = "Chosen MLP"}
 knitr::include_graphics('MLP_Network_Drawing.png')
 ```
 
