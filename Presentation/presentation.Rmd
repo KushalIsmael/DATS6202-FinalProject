@@ -30,11 +30,11 @@ library(kableExtra)
 knitr::include_graphics('/home/mkosko/PycharmProjects/machineLearning/histogram.png')
 ```
 
-## Target
+<!-- ## Target -->
 
-```{r violent, out.width="65%", fig.align='center'}
-knitr::include_graphics('/home/mkosko/PycharmProjects/machineLearning/violent.png')
-```
+<!-- ```{r violent, out.width="65%", fig.align='center'} -->
+<!-- knitr::include_graphics('/home/mkosko/PycharmProjects/machineLearning/violent.png') -->
+<!-- ``` -->
 
 
 ## Plan
