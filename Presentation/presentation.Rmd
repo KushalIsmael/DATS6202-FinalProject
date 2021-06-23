@@ -14,6 +14,12 @@ library(kableExtra)
 
 # Predicting Violent Crime Rates
 
+## Dataset
+- Data hosted on the University of California Irvine machine learning repository [@redmond2009crime]
+- Combines data from three datasets, the 1990 Census, 1995 FBI Uniform Crime Report (UCR), and the 1990 US Law Enforcement Management and Administrative Statistics Survey (LEMAS) 
+- Contain information about socio-economic indicators (e.g., median family income) and crime/law enforcement (e.g., per capita number of police officers)
+- 1994 observations and 122 predictive features. 
+
 ## Problem Statement
 - In this project, we want to predict violent crime rates from a variety of features using the "Communities and Crime" dataset
 - Main challenges are processing the dataset, choosing predictors, and models
@@ -30,11 +36,6 @@ knitr::include_graphics('/home/mkosko/PycharmProjects/machineLearning/histogram.
 knitr::include_graphics('/home/mkosko/PycharmProjects/machineLearning/violent.png')
 ```
 
-## Dataset
-- Data hosted on the University of California Irvine machine learning repository [@redmond2009crime]
-- Combines data from three datasets, the 1990 Census, 1995 FBI Uniform Crime Report (UCR), and the 1990 US Law Enforcement Management and Administrative Statistics Survey (LEMAS) 
-- Contain information about socio-economic indicators (e.g., median family income) and crime/law enforcement (e.g., per capita number of police officers)
-- 1994 observations and 122 predictive features. 
 
 ## Plan
 - Choose a method for dealing with missing data
@@ -86,7 +87,17 @@ knitr::include_graphics('/home/mkosko/PycharmProjects/machineLearning/violent.pn
 - We use 5-fold cross validation to choose hyperparameters for each model type
 - Implemented with `GridSearchCV`, scored by `neg_mean_squared_error`
 
+
+# Results
+
+## Model Architecture
+
+```{r our-mlp, out.width="85%", fig.align='center', fig.cap = "Chosen MLP"}
+knitr::include_graphics('MLP_Network_Drawing.png')
+```
+
 ## Results
+
 ```{r non}
 non <- fread('/home/mkosko/PycharmProjects/machineLearning/modeleval-full.csv')
 impute <- fread('/home/mkosko/PycharmProjects/machineLearning/modeleval-impute.csv')
