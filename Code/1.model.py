@@ -161,7 +161,7 @@ plt.title('Violent Crimes per Population Comparison')
 plt.hist(y_test,bins=20,label='Actual',alpha=0.5)
 plt.hist(y_pred, bins=20, label='Predicted',alpha=0.5)
 plt.legend()
-plt.savefig('Histogram Comparison', dpi=300, bbox_inches='tight')
+plt.savefig('Histogram_Comparison', dpi=300, bbox_inches='tight')
 
 
 
