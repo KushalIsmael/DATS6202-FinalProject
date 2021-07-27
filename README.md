@@ -1,7 +1,9 @@
-# Summary
-This repo contains the final project for George Washington University's DATS6202: Machine Learning 1 course. We compared the effectiveness of a multilayer perceptron model to classical machine learning models in predicting violent crimes in a community.
+# Predicting Violent Crimes
 
-# File Structure
+## Description
+This repo contains the final project for George Washington University's DATS6202 - Machine Learning 1 course. We compared the effectiveness of a multilayer perceptron model to classical machine learning models in predicting violent crimes in a community using Python.
+
+## File Structure
 The files in this repo are organized and contained in the following folders:
 1. **Proposal**
    - A proposal for our project
@@ -20,7 +22,7 @@ The files in this repo are organized and contained in the following folders:
 4. **Presentation**
    - A story of the project process and results
 
-# Data Source
+## Data Source
 The data used in this project is from the UCI Machine Learning Repository and can be found at http://archive.ics.uci.edu/ml//datasets/Communities+and+Crime
 
 Creator: Michael Redmond (redmond '@' lasalle.edu); Computer Science; La Salle University; Philadelphia, PA, 19141, USA culled from 1990 US Census, 1995 US FBI Uniform Crime Report, 1990 US Law Enforcement Management and Administrative Statistics Survey, available from ICPSR at U of Michigan.
